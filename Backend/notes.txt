@@ -1,0 +1,23 @@
+For file uploading we are using multer and cloudinary
+
+cloudinary
+ ->It is a third party service used to store images and videos
+ ->We will get a url from here and that url is stored in the database
+ ->It is better for improving performance and scalability
+
+
+Multer 
+ ->It is a middleware for handling file uploads in NodeJS/ExpressJS
+
+When a user uploads a file through a form the browser sends the file in
+multi-part/form-data format.
+By default express cant read that type of request body
+So Multer:
+  ->Parses the incoming file
+  ->Stores the file temporarily
+  ->Makes it readable to the backend
+
+
+So multer gets the uploaded file to the backend and stores it temporarily.
+Once this file is uploaded to a third party servcie like AWS or Cloudinary the temporarily stored file will be deleted from the backend
+

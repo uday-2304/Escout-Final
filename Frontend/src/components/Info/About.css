@@ -1,0 +1,365 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Teko:wght@300;600&display=swap');
+
+:root {
+  --bg-black: #080808;
+  --bg-dark: #121212;
+  --re-red: #ff001f;
+  --text-white: #f0f0f0;
+  --text-gray: #888;
+}
+
+/* --- GLOBAL RESET --- */
+* {
+  box-sizing: border-box;
+}
+
+.es-container {
+  background-color: var(--bg-black);
+  color: var(--text-white);
+  font-family: 'Oswald', sans-serif;
+  overflow-x: hidden;
+  padding-bottom: 6rem;
+}
+
+.es-section {
+  padding: 4rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* --- HEADERS --- */
+.es-header-group {
+  margin-bottom: 3rem;
+  text-align: left;
+  border-left: 5px solid var(--re-red);
+  padding-left: 1.5rem;
+  z-index: 2;
+  position: relative;
+}
+
+.es-header-group.right-align {
+  text-align: right;
+  border-left: none;
+  border-right: 5px solid var(--re-red);
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+.es-heading {
+  font-family: 'Teko', sans-serif;
+  font-size: 4.5rem;
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.text-red {
+  color: var(--re-red);
+}
+
+.es-subtitle {
+  font-family: 'Oswald', sans-serif;
+  color: var(--text-gray);
+  font-size: 1rem;
+  letter-spacing: 1px;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  max-width: 600px;
+  display: inline-block;
+}
+
+/* --- SECTION 1: GRID CARDS --- */
+.es-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.es-card {
+  background: var(--bg-dark);
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid #222;
+}
+
+.es-card:hover {
+  border-color: var(--re-red);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 0, 31, 0.15);
+}
+
+.card-image-wrapper {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+
+.card-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.2);
+  transition: 0.4s;
+}
+
+.es-card:hover .card-image-wrapper img {
+  filter: grayscale(0%) contrast(1.1);
+}
+
+.step-number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--re-red);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+}
+
+.card-content {
+  padding: 1.5rem;
+  position: relative;
+}
+
+.card-content h3 {
+  font-family: 'Teko', sans-serif;
+  font-size: 1.8rem;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+}
+
+.card-content p {
+  font-size: 0.9rem;
+  color: #aaa;
+  line-height: 1.4;
+  font-weight: 300;
+}
+
+.deco-corner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  background: var(--re-red);
+  clip-path: polygon(100% 0, 0% 100%, 100% 100%);
+}
+
+/* --- SECTION 2: FEATURES (INTEL) --- */
+.features-section {
+  margin-top: 4rem;
+  border-top: 1px solid #333;
+  padding-top: 4rem;
+}
+
+.intel-background-text {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  font-size: 14rem;
+  font-family: 'Teko', sans-serif;
+  color: rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+  z-index: 0;
+  line-height: 0.8;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  background: linear-gradient(180deg, #151515 0%, #0a0a0a 100%);
+  border: 1px solid #333;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.feature-card:hover {
+  border-color: #555;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--re-red);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover::before {
+  transform: scaleY(1);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--re-red);
+  opacity: 0.8;
+}
+
+.feature-sub {
+  color: var(--re-red);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.feature-title {
+  font-family: 'Teko', sans-serif;
+  font-size: 2.2rem;
+  margin: 0.2rem 0 1rem 0;
+  color: #fff;
+}
+
+.feature-desc {
+  font-size: 0.95rem;
+  color: #888;
+  line-height: 1.6;
+}
+
+/* Horizontal Scan line effect for high-tech feel */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 0, 31, 0.3);
+  opacity: 0;
+  animation: scan 3s linear infinite;
+}
+
+.feature-card:hover .scan-line {
+  opacity: 1;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* --- SECTION 3: SUCCESS STORIES (MISSION REPORTS) --- */
+.success-section {
+  background: #0b0b0b;
+  margin-top: 4rem;
+}
+
+.success-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+  margin-top: 2rem;
+}
+
+.success-card {
+  display: flex;
+  border: 1px solid #222;
+  background: #111;
+}
+
+.success-img {
+  width: 40%;
+  position: relative;
+}
+
+.success-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%);
+}
+
+.success-data {
+  width: 60%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 2px solid var(--re-red);
+}
+
+.status-badge {
+  background: var(--re-red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.2rem 0.5rem;
+  width: fit-content;
+  margin-bottom: 1rem;
+}
+
+.success-data h3 {
+  font-family: 'Teko', sans-serif;
+  font-size: 2.5rem;
+  margin: 0;
+  line-height: 1;
+}
+
+.role-tag {
+  color: #666;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+}
+
+.result-text {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+}
+
+.quote {
+  font-style: italic;
+  color: #888;
+  border-left: 2px solid #333;
+  padding-left: 1rem;
+  margin: 0;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .es-grid, .features-grid, .success-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .es-heading {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .es-grid, .features-grid, .success-grid {
+    grid-template-columns: 1fr;
+  }
+  .success-card {
+    flex-direction: column;
+  }
+  .success-img {
+    width: 100%;
+    height: 200px;
+  }
+  .success-data {
+    width: 100%;
+    border-left: none;
+    border-top: 2px solid var(--re-red);
+  }
+}

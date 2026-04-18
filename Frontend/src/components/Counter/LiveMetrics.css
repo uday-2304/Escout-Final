@@ -1,0 +1,168 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Outfit:wght@400;500;700&display=swap');
+
+:root {
+  /* UPDATED TO RED THEME */
+  --primary: #D90000;   /* Deep Crimson */
+  --secondary: #FF0022; /* Neon Red */
+  --bg-deep: #080000;   /* Very deep reddish black background */
+  --glass: rgba(255, 255, 255, 0.02);
+  --border-light: rgba(255, 0, 34, 0.2); /* Subtle red border */
+}
+
+.live-stats {
+  position: relative;
+  background-color: var(--bg-deep);
+  color: #ffffff;
+  padding: 100px 20px;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.live-stats-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Title Section */
+.live-stats-title {
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  margin-bottom: 60px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.live-stats-title span {
+  background: linear-gradient(90deg, #c40303, var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Red glow */
+  text-shadow: 0 0 25px rgba(0, 0, 0, 0);
+}
+
+/* Grid Layout */
+.live-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin: 0 auto;
+}
+
+/* --- CARD DESIGN --- */
+.live-stats-card {
+  background: var(--glass);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 50px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden; /* Keeps particles inside */
+  /* Constant subtle red glow */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(217, 0, 0, 0.1);
+}
+
+/* Top Accent Line (Red gradient) */
+.live-stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  opacity: 0.8;
+}
+
+/* --- THE NUMBER (Counter) --- */
+.live-stats-number {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 5rem;
+  font-weight: 800;
+  margin-bottom: 5px;
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  
+  /* Constant Red Gradient & Shadow */
+  background: linear-gradient(180deg, #d40d0d 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Strong Red Glow */
+  filter: drop-shadow(0 0 20px rgba(255, 0, 34, 0.7));
+}
+
+.live-stats-label {
+  position: relative;
+  z-index: 2;
+  font-size: 1.2rem;
+  color: #cccccc; /* Warmer gray text */
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 600;
+}
+
+/* --- PARTICLE SYSTEM (Red Bubbles/Bullets) --- */
+.particles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  bottom: -20px; /* Start below the card */
+  display: block;
+  /* Neon Red Circles */
+  background-color: var(--secondary);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%; 
+  box-shadow: 0 0 15px var(--secondary), 0 0 5px var(--secondary); /* Stronger red glow */
+  opacity: 0;
+  animation: floatUp linear infinite;
+}
+
+/* Make some particles square for "tech" look (Deep Red) */
+.particle:nth-child(even) {
+  width: 4px;
+  height: 4px;
+  border-radius: 0; 
+  background-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-200px) scale(1.2); /* Moves up */
+    opacity: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .live-stats { padding: 60px 20px; }
+  .live-stats-number { font-size: 4rem; }
+}

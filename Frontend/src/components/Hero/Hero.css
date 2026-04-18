@@ -1,0 +1,209 @@
+/* ====== RESET & FONTS ====== */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@400;500;800;900&family=Inter:wght@400;500&display=swap');
+
+:root {
+  --neon-red: #ff0000; /* Bright Red for accents */
+  --deep-red: #a50000; /* Darker red for theme */
+  --tech-white: #ffffff;
+  --tech-gray: #cbd5e1;
+  --bg-black: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ================= HERO CONTAINER ================= */
+.hero-container {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  background: var(--bg-black);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* ================= LEFT SIDE: MEDIA SECTION ================= */
+.hero-image-wrapper {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+}
+
+/* New Container to hold Video + Red Tint together */
+.hero-media-box {
+  position: relative;
+  /* Keeping the exact size you wanted */
+  width: 75%;
+  height: 70%;
+  overflow: hidden; /* Ensures video stays inside */
+  box-shadow: 0 0 30px rgba(165, 0, 0, 0.2); /* Optional: Red glow around box */
+}
+
+/* The Video itself */
+.hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Optional: Make video slightly grayscale so red pops more */
+  filter: grayscale(80%) contrast(1.2); 
+  transform: scale(1.05); /* Slight zoom to prevent black edges on pan */
+}
+
+/* THE RED COATING */
+.red-coating {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* This creates the red tint effect */
+  background: linear-gradient(135deg, rgba(165, 0, 0, 0.6), rgba(80, 0, 0, 0.8));
+  mix-blend-mode: multiply; /* Blends red into the video */
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* --- THE "RICH" FADE --- */
+.hero-image-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20%;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, var(--bg-black) 100%);
+  z-index: 2;
+}
+
+/* ================= RIGHT SIDE: TEXT SECTION ================= */
+.hero-text-wrapper {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px; 
+  padding-right: 100px;
+  z-index: 10;
+  background: var(--bg-black);
+}
+
+/* ================= ANIMATIONS & PARTICLES ================= */
+.tech-header-anim {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards 0.2s;
+}
+
+.particle-stream {
+  position: absolute;
+  height: 4px;
+  /* Updated to Red Stream */
+  background: linear-gradient(90deg, transparent, var(--neon-red), transparent);
+  animation: streamMove 5s linear infinite;
+  opacity: 0.9;
+}
+
+.p1 { top: 50%; left: -100px; width: 150px; animation-delay: 0s; }
+.p2 { top: 50%; left: -200px; width: 100px; animation-delay: 2.5s; opacity: 0.8; }
+
+@keyframes streamMove {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(800px); }
+}
+
+/* ================= TYPOGRAPHY ================= */
+.hero-text-wrapper h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(60px, 8vw, 110px); 
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--tech-white);
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+  line-height: 0.95;
+  opacity: 0;
+  transform: translateX(40px);
+  animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.4s;
+}
+
+/* Add a red accent to the text hover or selection if desired */
+.hero-text-wrapper h1::selection {
+  background: var(--neon-red);
+}
+
+.hero-text-wrapper p {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--tech-gray);
+  max-width: 650px;
+  opacity: 0;
+  transform: translateX(40px);
+  animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.6s;
+}
+
+/* ================= TECH FRAME UI ================= */
+.tech-frame {
+  position: absolute;
+  inset: 40px;
+  border: 1px solid rgba(255, 0, 0, 0.1); /* Subtle Red Border */
+  z-index: 20;
+  pointer-events: none;
+}
+
+.crosshair {
+  position: absolute;
+  color: var(--neon-red); /* Red Crosshairs */
+  font-size: 16px;
+  font-weight: 300;
+}
+.crosshair.tl { top: 40px; left: 40px; }
+.crosshair.br { bottom: 40px; right: 40px; }
+
+/* ================= KEYFRAMES ================= */
+@keyframes slideInRight {
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .hero-text-wrapper h1 { font-size: 70px; }
+  .hero-text-wrapper { padding-right: 50px; }
+}
+
+@media (max-width: 992px) {
+  .hero-container { flex-direction: column; }
+  .hero-image-wrapper { width: 100%; height: 50%; }
+  .hero-text-wrapper { width: 100%; height: 50%; padding: 40px; text-align: center; align-items: center; }
+  
+  /* Mobile Fade */
+  .hero-image-overlay {
+    width: 100%; height: 50%; top: auto; bottom: 0; right: 0;
+    background: linear-gradient(to bottom, transparent, var(--bg-black));
+  }
+  
+  .tech-header-anim { justify-content: center; }
+  .hero-text-wrapper h1 { font-size: 50px; line-height: 1.1; margin-bottom: 15px; }
+  .hero-text-wrapper p { font-size: 16px; }
+  .tech-frame { inset: 20px; }
+  .crosshair.tl { top: 20px; left: 20px; }
+  .crosshair.br { bottom: 20px; right: 20px; }
+}
