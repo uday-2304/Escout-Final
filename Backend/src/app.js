@@ -20,8 +20,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://escout-esports-scouting-platform.vercel.app",
-  "https://escout-esports-scouting-platform-1.onrender.com"
+  "https://escout-scouting.vercel.app",
+  "https://escout-final.onrender.com"
 ];
 
 const corsOptions = {
@@ -30,7 +30,8 @@ origin: function (origin, callback) {
 if (
 !origin ||
 allowedOrigins.includes(origin) ||
-(origin && origin.startsWith("http://localhost"))
+(origin && origin.startsWith("http://localhost")) ||
+(origin && origin.endsWith(".vercel.app"))
 ) {
 callback(null, true);
 } else {

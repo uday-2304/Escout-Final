@@ -19,11 +19,18 @@ const httpServer = createServer(app);
 // 3. INITIALIZE SOCKET.IO ON THAT SERVER
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      "http://localhost:5173", 
-      "https://escout-esports-scouting-platform.vercel.app",
-      "https://escout-esports-scouting-platform-1.onrender.com"
-    ],
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        origin.startsWith("http://localhost") ||
+        origin.endsWith(".vercel.app") ||
+        origin.endsWith(".onrender.com")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
