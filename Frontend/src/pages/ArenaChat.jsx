@@ -819,12 +819,70 @@ const AdvancedChat = () => {
         .btn-create {
           background: #d32f2f; border: none; color: #fff; cursor: pointer; padding: 8px 16px; border-radius: 6px;
         }
+        
+        .mobile-back-btn {
+          display: none;
+          background: none;
+          border: none;
+          color: #fff;
+          margin-right: 15px;
+          cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+          .app-container {
+            flex-direction: column;
+          }
+          .sidebar, .main-chat {
+            width: 100%;
+            height: 100%;
+          }
+          .sidebar.hidden-on-mobile {
+            display: none;
+          }
+          .main-chat.hidden-on-mobile {
+            display: none;
+          }
+          .mobile-back-btn {
+            display: flex;
+            align-items: center;
+          }
+          .chat-area-header {
+            padding: 15px 10px;
+          }
+          .chat-area-header h2 {
+            font-size: 16px;
+          }
+          .messages-container {
+            padding: 20px 15px;
+          }
+          .input-container {
+            padding: 15px 10px;
+          }
+          .input-box {
+            padding: 8px 15px;
+            gap: 10px;
+          }
+          .search-bar {
+            padding: 6px 10px;
+          }
+          .icon-btn-small {
+            width: 32px;
+            height: 32px;
+          }
+          .message-bubble {
+            max-width: 85%;
+          }
+          .chat-item-header h4 {
+            font-size: 14px;
+          }
+        }
       `}</style>
 
       <div className="chat-wrapper-component">
         <div className="app-container">
         {/* SIDEBAR */}
-        <div className="sidebar">
+        <div className={`sidebar ${activeChatId ? 'hidden-on-mobile' : ''}`}>
           <div className="sidebar-header">
             <div className="search-bar">
               <Search size={18} />
@@ -864,8 +922,11 @@ const AdvancedChat = () => {
         </div>
 
         {/* MAIN CHAT AREA */}
-        <div className="main-chat">
+        <div className={`main-chat ${!activeChatId ? 'hidden-on-mobile' : ''}`}>
           <div className="chat-area-header">
+            <button className="mobile-back-btn" onClick={() => setActiveChatId(null)} title="Back to chats">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <div className="avatar">{getInitials(getChatName(activeChatDetails, loggedUser))}</div>
             <div>
               <h2>

@@ -421,11 +421,67 @@ const RankingsPage = () => {
         /* RESPONSIVE */
         @media (max-width: 768px) {
           .table-header, .player-row {
-            grid-template-columns: 50px 1fr 100px; /* Hide Team on mobile */
+            grid-template-columns: 40px 1fr 90px; /* Hide Team on mobile but keep Winnings */
+            padding: 12px 10px;
+          }
+          .table-header {
+            font-size: 12px;
+            padding-bottom: 10px;
           }
           .team-col { display: none; }
-          .controls-bar { flex-direction: column; align-items: stretch; }
-          .search-input { width: 100%; }
+          .controls-bar { flex-direction: column; align-items: stretch; gap: 15px; padding: 15px; }
+          .search-input { width: 100%; box-sizing: border-box; }
+          .search-container { width: 100%; }
+          .rank-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
+          }
+          .rank-header h1 {
+            font-size: 38px;
+          }
+          .subtitle {
+            font-size: 14px;
+          }
+          .winnings-col {
+            font-size: 16px;
+            text-align: right;
+          }
+          .player-col { gap: 10px; }
+          .player-img, .fallback-avatar { width: 35px; height: 35px; font-size: 16px; }
+          .alias { font-size: 16px; }
+          .real-name { font-size: 12px; }
+          /* Show hover actions persistently on mobile */
+          .player-row-actions {
+            opacity: 1;
+            position: relative;
+            right: 0;
+            padding-left: 10px;
+            margin-top: 10px;
+            grid-column: 1 / -1; /* Move to new line inside the row */
+            justify-content: flex-end;
+          }
+          .player-row {
+            display: flex;
+            flex-wrap: wrap; 
+          }
+          /* Hack: Switch from Grid to Flex on mobile for rows that need wrapping actions */
+          .player-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 90px;
+          }
+          .player-row:hover { transform: none; }
+          .player-row-actions {
+             /* Hide on mobile if it breaks grid, or better yet override position */
+             opacity: 1;
+             grid-column: 1 / -1;
+             position: static;
+             margin-top: 5px;
+             justify-content: stretch;
+             width: 100%;
+          }
+          .chat-action-btn { width: 100%; justify-content: center; }
         }
       `}</style>
 
@@ -469,6 +525,10 @@ const RankingsPage = () => {
             }
             .mode-btn:hover { color: #fff; }
             .mode-btn.active { color: var(--red-primary); }
+            @media (max-width: 768px) {
+                .mode-toggle { flex-direction: column; gap: 10px; }
+                .mode-btn { font-size: 20px; }
+            }
         `}</style>
 
         {/* CONTROLS (Show Game Tabs for BOTH modes) */}
