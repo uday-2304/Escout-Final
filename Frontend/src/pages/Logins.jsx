@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaGoogle, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import { FaGoogle, FaRegEye, FaRegEyeSlash, FaFacebook } from "react-icons/fa6";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
+import { jwtDecode } from "jwt-decode";
 import api from "../api/Axios";
 import { useToast } from "../components/Toast/ToastContext";
 
@@ -34,7 +37,61 @@ const AuthPage = () => {
   };
 
   const { showToast } = useToast();
-  const handleGoogleLogin = () => window.open("https://accounts.google.com/signin", "_blank");
+
+  const handleSocialBackend = async (data) => {
+    try {
+      const res = await api.post("/api/auth/social-login", data);
+      const token = res.data?.data?.tokens?.accessToken || res.data?.token || res.data?.accessToken;
+      const userRole = res.data?.data?.user?.role || res.data?.user?.role || "player";
+
+      if (!token) {
+        showToast("Social Login failed. Token not received.", { type: "error" });
+        return;
+      }
+      localStorage.setItem("token", token);
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("userRole", userRole);
+      
+      const loggedInUser = res.data?.data?.user || res.data?.user;
+      if (loggedInUser) {
+          localStorage.setItem("userInfo", JSON.stringify({ user: loggedInUser }));
+      }
+
+      window.dispatchEvent(new Event("authChanged"));
+      showToast("Social Login successful!", { type: "success" });
+      
+      if (userRole === "scout") navigate("/scout-dashboard");
+      else navigate("/dashboard");
+    } catch (err) {
+      console.log(err);
+      showToast(err.response?.data?.message || "Social login failed", { type: "error" });
+    }
+  };
+
+  const handleGoogleSuccess = (credentialResponse) => {
+      const decoded = jwtDecode(credentialResponse.credential);
+      handleSocialBackend({
+          email: decoded.email,
+          name: decoded.name,
+          authProvider: 'google',
+          authProviderId: decoded.sub,
+          photoUrl: decoded.picture
+      });
+  };
+
+  const handleFacebookSuccess = (response) => {
+      if(!response || !response.email) {
+          showToast("Facebook login failed or email missing", { type: "error"});
+          return;
+      }
+      handleSocialBackend({
+          email: response.email,
+          name: response.name,
+          authProvider: 'facebook',
+          authProviderId: response.userID,
+          photoUrl: response.picture?.data?.url
+      });
+  };
 
   // ==== Forgot Password Logic ====
   const handleForgotPassword = (e) => {
@@ -277,11 +334,30 @@ const AuthPage = () => {
                         {isLogin ? "Sign In" : "Sign Up"}
                     </button>
 
-                    {/* Google Button */}
-                    <button type="button" style={styles.googleBtn} onClick={handleGoogleLogin}>
-                        <FaGoogle style={{ marginRight: "10px", color: "#DB4437" }} /> 
-                        {isLogin ? "Sign In with Google" : "Sign Up with Google"}
-                    </button>
+                    {/* Social Buttons */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "mock-client-id"}>
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => showToast('Google Login Failed', {type: 'error'})}
+                                text={isLogin ? "signin_with" : "signup_with"}
+                                width="300"
+                            />
+                        </GoogleOAuthProvider>
+                        
+                        <FacebookLogin
+                            appId={import.meta.env.VITE_FACEBOOK_APP_ID || "18000000000000"}
+                            autoLoad={false}
+                            fields="name,email,picture"
+                            callback={handleFacebookSuccess}
+                            render={renderProps => (
+                                <button type="button" style={{...styles.googleBtn, width: '100%', borderColor: '#1877F2', color: '#1877F2', height: '40px'}} onClick={renderProps.onClick}>
+                                    <FaFacebook style={{ marginRight: "10px", color: "#1877F2" }} /> 
+                                    Continue with Facebook
+                                </button>
+                            )}
+                        />
+                    </div>
 
                 </form>
 

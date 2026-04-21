@@ -419,16 +419,16 @@ const RankingsPage = () => {
         }
 
         /* RESPONSIVE */
-        @media (max-width: 768px) {
-          .table-header, .player-row {
-            grid-template-columns: 40px 1fr 90px; /* Hide Team on mobile but keep Winnings */
-            padding: 12px 10px;
-          }
+        @media (max-width: 900px) {
           .table-header {
-            font-size: 12px;
-            padding-bottom: 10px;
+            display: none; /* Hide table header on mobile */
           }
-          .team-col { display: none; }
+          
+          .leaderboard-table {
+            display: grid;
+            gap: 15px; /* Spacing between cards */
+          }
+          
           .controls-bar { flex-direction: column; align-items: stretch; gap: 15px; padding: 15px; }
           .search-input { width: 100%; box-sizing: border-box; }
           .search-container { width: 100%; }
@@ -438,55 +438,76 @@ const RankingsPage = () => {
             gap: 15px;
             margin-bottom: 25px;
           }
-          .rank-header h1 {
-            font-size: 38px;
+          .rank-header h1 { font-size: 38px; }
+          .subtitle { font-size: 14px; }
+          
+          /* Change row into a premium card */
+          .player-row {
+            display: flex;
+            flex-direction: column;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
           }
-          .subtitle {
+          
+          .player-row:hover {
+            transform: none;
+            border-left: 1px solid #222;
+            border-color: #333;
+          }
+          
+          .rank-col {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 32px;
+            opacity: 0.8;
+          }
+
+          .player-col { 
+            gap: 15px; 
+            margin-bottom: 15px;
+            align-items: flex-start;
+          }
+          
+          .player-img, .fallback-avatar { width: 50px; height: 50px; font-size: 20px; border-radius: 8px; }
+          .alias { font-size: 20px; }
+          .real-name { font-size: 14px; margin-bottom: 5px; }
+          
+          .team-col { 
+            display: flex; 
+            margin-bottom: 15px;
             font-size: 14px;
+            color: #aaa;
           }
+
           .winnings-col {
-            font-size: 16px;
-            text-align: right;
+            font-size: 24px;
+            text-align: left;
+            margin-bottom: 10px;
           }
-          .player-col { gap: 10px; }
-          .player-img, .fallback-avatar { width: 35px; height: 35px; font-size: 16px; }
-          .alias { font-size: 16px; }
-          .real-name { font-size: 12px; }
+          
           /* Show hover actions persistently on mobile */
           .player-row-actions {
             opacity: 1;
-            position: relative;
-            right: 0;
-            padding-left: 10px;
-            margin-top: 10px;
-            grid-column: 1 / -1; /* Move to new line inside the row */
-            justify-content: flex-end;
+            position: static;
+            padding-left: 0;
+            width: 100%;
           }
-          .player-row {
-            display: flex;
-            flex-wrap: wrap; 
+          
+          .chat-action-btn { 
+            width: 100%; 
+            justify-content: center; 
+            padding: 12px;
+            font-size: 16px;
           }
-          /* Hack: Switch from Grid to Flex on mobile for rows that need wrapping actions */
-          .player-row {
-            display: grid;
-            grid-template-columns: 40px 1fr 90px;
-          }
-          .player-row:hover { transform: none; }
-          .player-row-actions {
-             /* Hide on mobile if it breaks grid, or better yet override position */
-             opacity: 1;
-             grid-column: 1 / -1;
-             position: static;
-             margin-top: 5px;
-             justify-content: stretch;
-             width: 100%;
-          }
-          .chat-action-btn { width: 100%; justify-content: center; }
         }
       `}</style>
-
+      
       <div className="container">
-
         {/* HEADER */}
         <div className="rank-header">
           <div>
@@ -525,7 +546,7 @@ const RankingsPage = () => {
             }
             .mode-btn:hover { color: #fff; }
             .mode-btn.active { color: var(--red-primary); }
-            @media (max-width: 768px) {
+            @media (max-width: 900px) {
                 .mode-toggle { flex-direction: column; gap: 10px; }
                 .mode-btn { font-size: 20px; }
             }

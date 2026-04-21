@@ -347,6 +347,83 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
+const socialLogin = asyncHandler(async (req, res) => {
+    const { email, name, authProvider, authProviderId, photoUrl } = req.body;
+
+    if (!email || !authProvider || !authProviderId) {
+        throw new ApiError(400, "Missing required fields for social login");
+    }
+
+    if (!['google', 'facebook'].includes(authProvider)) {
+        throw new ApiError(400, "Invalid auth provider");
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+        // Register new user seamlessly without password
+        let baseName = name ? name.replace(/\s+/g, '').toLowerCase() : email.split('@')[0];
+        
+        // Ensure unique username
+        let uniqueName = baseName;
+        let counter = 1;
+        while (await User.findOne({ userName: uniqueName })) {
+             uniqueName = baseName + counter;
+             counter++;
+        }
+
+        user = await User.create({
+            userName: uniqueName,
+            email,
+            authProvider,
+            authProviderId,
+            coverImage: photoUrl || "",
+            role: "player",
+            isEmailVerified: true
+        });
+    } else {
+        // If user logged in locally before, maybe link the account
+        if (user.authProvider === 'local') {
+            user.authProvider = authProvider;
+            user.authProviderId = authProviderId;
+            if (photoUrl && !user.coverImage) {
+                user.coverImage = photoUrl;
+            }
+            await user.save({ validateBeforeSave: false });
+        }
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+    };
+
+    return res
+        .status(200)
+        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    tokens: {
+                        accessToken,
+                        refreshToken,
+                    },
+                },
+                "Social login successful"
+            )
+        );
+});
+
+
 const logOutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
@@ -645,5 +722,6 @@ export {
     resetPassword,
     userProfile,
     updateAccountDetails,
-    getAllUsers
+    getAllUsers,
+    socialLogin
 };

@@ -21,7 +21,16 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"]
+      // Only require password if the user signed up locally
+      required: function() { return this.authProvider === 'local'; }
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'facebook'],
+      default: 'local'
+    },
+    authProviderId: {
+      type: String
     },
     refreshToken: {
       type: String
@@ -57,12 +66,13 @@ const userSchema = new Schema(
 )
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
+  if (!this.password) return false; // Non-local users don't have a password
   return await bcrypt.compare(password, this.password);
 };
 

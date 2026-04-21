@@ -13,7 +13,8 @@ import {
     userProfile,
     updateAccountDetails,
     getAllUsers,
-    submitContactForm
+    submitContactForm,
+    socialLogin
 } from "../controllers/userController.js";
 import { upload } from "../middlewares/upload.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -35,6 +36,8 @@ router.route("/verify-otp").post(verifyOtpAndRegister);
 router.route("/resend-otp").post(resendOtp);
 
 router.route("/login").post(loginUser);
+
+router.route("/social-login").post(socialLogin);
 
 router.route("/refresh-token").post(refreshAccessToken);
 
