@@ -120,7 +120,7 @@ const Dashboard = () => {
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         
         body { background: var(--bg-dark); color: var(--text-white); font-family: 'Rajdhani', sans-serif; }
-        .dashboard-layout { display: flex; min-height: 100dvh; background-color: var(--bg-dark); overflow-x: hidden; }
+        .dashboard-layout { display: flex; min-height: 100dvh; background-color: var(--bg-dark); overflow-x: hidden; width: 100%; }
         
         /* SIDEBAR */
         .sidebar { 
@@ -153,23 +153,23 @@ const Dashboard = () => {
         .rank-val { color: var(--red-primary); font-weight: 700; letter-spacing: 1px; }
 
         /* MAIN CONTENT */
-        /* CHANGED: Reduced top padding and added z-index constraints */
         .main-content { 
           flex: 1; margin-left: 260px; 
           padding: 15px 60px 50px 60px; 
           margin-top: 80px; 
           position: relative;
           z-index: 1;
+          width: calc(100% - 260px); /* Prevents overflow */
         }
-        /* CHANGED: Reduced margin-bottom to pull the hero text up tighter */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
         
         .search-wrapper { 
           display: flex; align-items: center; gap: 15px; background: transparent;
-          border-bottom: 1px solid #333; padding: 10px 0; width: 350px; 
+          border-bottom: 1px solid #333; padding: 10px 0; width: 100%; max-width: 350px; 
           transition: all 0.3s; 
           position: relative; 
-          z-index: 0; /* Ensures navbar dropdown falls over it */
+          z-index: 0;
         }
         .search-wrapper:focus-within { border-color: var(--red-primary); }
         .search-input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 500; }
@@ -179,22 +179,32 @@ const Dashboard = () => {
           border: 1px solid var(--red-primary); color: var(--red-primary); text-decoration: none; 
           padding: 10px 25px; font-size: 14px; font-weight: 700; letter-spacing: 1px; 
           transition: all 0.3s; 
+          white-space: nowrap;
         }
         .upload-btn:hover { background: var(--red-primary); color: #fff; transform: translateY(-2px); }
         
         /* HERO */
         .hero { margin-bottom: 40px; }
-        /* CHANGED: Font size reduced from 72px to 50px */
-        .hero-title { font-family: 'Teko', sans-serif; font-size: 50px; font-weight: 600; color: #fff; line-height: 0.85; margin-bottom: 10px; text-transform: uppercase; }
+        .hero-title { font-family: 'Teko', sans-serif; font-size: 50px; font-weight: 600; color: #fff; line-height: 0.85; margin-bottom: 10px; text-transform: uppercase; transition: font-size 0.3s; }
         .hero-title span { color: var(--red-primary); }
         .hero-sub { color: var(--text-dim); letter-spacing: 4px; text-transform: uppercase; font-size: 14px; font-weight: 600; margin-left: 5px; }
 
+        /* LOADING TEXT */
+        .loading-text {
+          color: var(--red-primary);
+          font-size: 24px;
+          font-family: 'Teko', sans-serif;
+          letter-spacing: 2px;
+          transition: font-size 0.3s;
+        }
+
         /* GRID & CARDS */
-        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 1px solid var(--border-dark); padding-bottom: 15px; }
+        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 1px solid var(--border-dark); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-size: 24px; font-weight: 700; letter-spacing: 1px; color: #fff; display: flex; align-items: center; gap: 10px; }
         .count { font-size: 13px; color: #555; font-weight: 600; letter-spacing: 1px; }
 
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        /* CHANGED: Fluid grid to prevent tiny columns on mobile */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
         
         .video-card { background: transparent; cursor: pointer; transition: transform 0.3s ease; }
         .video-card:hover { transform: translateY(-5px); }
@@ -232,11 +242,33 @@ const Dashboard = () => {
         .stat-item { display: flex; align-items: center; gap: 5px; color: #666; font-size: 12px; font-weight: 600; }
         .trash-icon:hover { color: var(--red-primary); }
 
-        /* MODAL & RESPONSIVE */
+        /* MODAL */
         .modal-overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 100; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        @media (max-width: 1100px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 30px; } .hero-title { font-size: 48px; } }
+        /* RESPONSIVE MEDIA QUERIES */
+        @media (max-width: 1100px) { 
+          .sidebar { display: none; } 
+          .main-content { margin-left: 0; width: 100%; padding: 30px; } 
+          .hero-title { font-size: 44px; } 
+        }
+
+        @media (max-width: 768px) {
+          .main-content { padding: 20px; }
+          .header { flex-direction: column; align-items: stretch; }
+          .search-wrapper { max-width: 100%; }
+          .header-actions { justify-content: flex-end; }
+          .upload-btn { width: 100%; justify-content: center; }
+          .hero-title { font-size: 36px; }
+          .hero-sub { font-size: 12px; letter-spacing: 2px; }
+          .section-header { flex-direction: column; align-items: flex-start; }
+          .loading-text { font-size: 18px; } /* Adapts loading text */
+        }
+
+        @media (max-width: 480px) {
+          .video-grid { grid-template-columns: 1fr; } /* Stack vertically on very small screens */
+          .main-content { padding: 15px; }
+        }
       `}</style>
 
       {/* ===== SIDEBAR ===== */}
@@ -298,11 +330,11 @@ const Dashboard = () => {
           </div>
 
           {loading ? (
-            <p style={{ color: '#ff001f', fontSize: '24px', fontFamily: 'Teko' }}>LOADING SYSTEM...</p>
+            /* Using the new responsive class */
+            <p className="loading-text">LOADING SYSTEM...</p>
           ) : (
             <div className="video-grid">
               {filteredVideos.map((video) => {
-                // CHANGED: Added logic to handle full URLs vs relative paths safely
                 const thumbUrl = video.thumbnail 
                   ? (video.thumbnail.startsWith("http") 
                       ? video.thumbnail 
@@ -429,6 +461,7 @@ const VideoModal = ({ video, onClose }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box split-view" onClick={(e) => e.stopPropagation()}>
+        {/* Adjusted Close button slightly to ensure it doesn't get cut off on mobile devices */}
         <button className="close-btn" onClick={onClose}><IoMdClose /></button>
 
         <div className="modal-split">
@@ -478,19 +511,23 @@ const VideoModal = ({ video, onClose }) => {
         .int-header { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-family: 'Teko'; font-size: 20px; color: #fff; }
         .comments-list { flex: 1; overflow-y: auto; padding: 15px; font-size: 14px; color: #ccc; }
         .comment-item { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #1a1a1a; word-break: break-word; }
-        .comment-item strong { color: #ff001f; margin-right: 5px; }
+        .comment-item strong { color: var(--red-primary); margin-right: 5px; }
         .comment-input-box { padding: 15px; border-top: 1px solid #222; display: flex; gap: 10px; background: #080808; }
         .comment-input-box input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 10px; outline: none; border-radius: 4px; }
-        .comment-input-box button { background: #ff001f; border: none; color: #fff; padding: 0 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .comment-input-box button { background: var(--red-primary); border: none; color: #fff; padding: 0 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
 
-      .close-btn { position: absolute; top: 15px; left: 0px; z-index: 10; background: rgba(0,0,0,0.6); color: #fff; font-size: 24px; cursor: pointer;  padding: 5px; border:none; transition: opacity 0.3s; opacity: 0; }
-             .modal-box:hover .close-btn { opacity: 1; } 
+        /* Modified to ensure it sits safely away from the absolute edge on small phones */
+        .close-btn { position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.6); color: #fff; font-size: 24px; cursor: pointer; padding: 8px; border:none; border-radius: 50%; transition: opacity 0.3s, background 0.3s; opacity: 1; }
+        .close-btn:hover { background: var(--red-primary); }
 
 
         @media (max-width: 900px) {
           .modal-split { flex-direction: column; }
-          .interaction-section { height: 40%; }
+          .interaction-section { height: 40%; min-width: 100%; }
           .video-section { height: 60%; }
+        }
+        @media (max-width: 480px) {
+           .modal-box { width: 100%; height: 100vh; border: none; }
         }
       `}</style>
     </div>

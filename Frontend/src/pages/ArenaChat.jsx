@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { Send, CheckCheck, Mic, Smile, Search, Paperclip, Plus, MoreVertical, Edit2, X, Image as ImageIcon, FileText, Trash2, LogOut, Menu } from 'lucide-react';
+import { Send, CheckCheck, Mic, Smile, Search, Paperclip, Plus, Edit2, X, FileText, Trash2, LogOut, Menu } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "https://escout-esports-scouting-platform-1.onrender.com";
@@ -10,11 +10,9 @@ const AdvancedChat = () => {
   const socket = useRef(null);
   const location = useLocation();
   const rawUserInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
-  // If stored info is nested under "user", extract it natively, else use the object directly
   const loggedUser = rawUserInfo.user || rawUserInfo;
   const token = localStorage.getItem("token") || rawUserInfo.accessToken;
   
-  // Extra security to ensure we have the True User ID even if storage clears partially
   let decodedToken = {};
   if (token) {
     try {
@@ -23,7 +21,6 @@ const AdvancedChat = () => {
   }
   const myUserId = loggedUser._id || loggedUser.id || loggedUser.userId || decodedToken.id || decodedToken._id;
 
-  // Create an axios instance with auth
   const api = axios.create({
       baseURL: BACKEND_URL,
       headers: { Authorization: `Bearer ${token}` }
@@ -53,7 +50,6 @@ const AdvancedChat = () => {
       api.get("/api/v1/users/all").then(res => setPlatformUsers(res.data.data || [])).catch(err => console.error(err));
   }, []);
 
-  // 1. Initialize Socket Connection & Receive Messages
   useEffect(() => {
     socket.current = io(BACKEND_URL, {
       withCredentials: true,
@@ -67,7 +63,7 @@ const AdvancedChat = () => {
 
     socket.current.on("receive_message", (data) => {
       const m = data.message;
-      const mappedMsg = (data.message._id) ? {
+      const mappedMsg = (m._id) ? {
           id: m._id,
           text: m.content || "",
           type: m.type || 'text',
@@ -82,7 +78,6 @@ const AdvancedChat = () => {
 
       setMessages((prev) => {
         const currentMsgs = prev[data.chatId] || [];
-        // Prevent duplicate rendering
         if (currentMsgs.some(msg => msg.id === mappedMsg.id)) return prev;
         return {
           ...prev,
@@ -90,7 +85,6 @@ const AdvancedChat = () => {
         };
       });
 
-      // Update sidebar latest message for real-time order bumping (if needed)
       fetchChats();
     });
 
@@ -124,13 +118,12 @@ const AdvancedChat = () => {
     };
   }, []);
 
-  // 2. Fetch all chats on load
   const fetchChats = async () => {
       try {
           const res = await api.get("/api/chat");
           setChats(res.data.data || []);
       } catch (err) {
-          console.error("Failed to fetch chats", err);
+          console.error(err);
       }
   };
 
@@ -138,20 +131,18 @@ const AdvancedChat = () => {
      fetchChats();
   }, []);
 
-  // 3. Initiate Chat from Profile/Scout Routing
   useEffect(() => {
       if(location.state?.targetUserId) {
           api.post("/api/chat", { userId: location.state.targetUserId })
              .then(res => {
                  const createdOrFetchedChat = res.data.data;
                  setActiveChatId(createdOrFetchedChat._id);
-                 fetchChats(); // Refresh sidebar to show the new chat
+                 fetchChats();
              })
-             .catch(err => console.error("Error creating chat", err));
+             .catch(err => console.error(err));
       }
   }, [location.state]);
 
-  // 4. Fetch specific chat's messages and Join Socket Room
   useEffect(() => {
      if(activeChatId) {
          api.get(`/api/messages/${activeChatId}`)
@@ -171,14 +162,13 @@ const AdvancedChat = () => {
                 setMessages(prev => ({...prev, [activeChatId]: mappedMessages}));
                 socket.current.emit("join_chat", activeChatId);
             })
-            .catch(err => console.error("Error fetching messages", err));
+            .catch(err => console.error(err));
      }
   }, [activeChatId]);
 
   const isInitialLoad = useRef(true);
   const prevActiveChatId = useRef(activeChatId);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     const isChatSwitch = prevActiveChatId.current !== activeChatId;
     if (isInitialLoad.current || isChatSwitch) {
@@ -189,7 +179,6 @@ const AdvancedChat = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, activeChatId]);
-
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -218,7 +207,7 @@ const AdvancedChat = () => {
                message: updatedMsg
            });
        } catch (err) {
-           console.error("Edit msg failed", err);
+           console.error(err);
        }
        setInputValue("");
        setEditingMsgId(null);
@@ -232,17 +221,14 @@ const AdvancedChat = () => {
             type: 'text'
         };
 
-        // Hit our backend POST /api/messages
         const res = await api.post("/api/messages", payload);
         const savedMsg = res.data.data;
 
-        // Note: SavedMsg must map to our UI. UI expects properties like .text, .type, .sender
-        // To prevent massive UI rewrites below, we wrap the DB message in UI variables
         const mappedMsg = {
             id: savedMsg._id,
             text: savedMsg.content,
             type: savedMsg.type || 'text',
-            sender: "me", // Because WE sent it
+            sender: "me",
             time: new Date(savedMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: "read", 
             reactions: []
@@ -259,21 +245,19 @@ const AdvancedChat = () => {
         
         socket.current.emit("send_message", {
             chatId: currentChatId,
-            message: savedMsg // The other person will see it as "other" since we send raw DB object
+            message: savedMsg
         });
 
-        fetchChats(); // To update the latestMessage in sidebar
+        fetchChats();
         setInputValue("");
     } catch (err) {
         console.error(err);
     }
   };
 
-  // Group Creation
   const handleCreateGroup = async (e) => {
       e.preventDefault();
       if (!newGroupName.trim() || selectedUsers.length < 1) {
-        // We lowered this to < 1 so testing with only 1 other user is permitted instead of mandating 3 total
         return;
       }
       try {
@@ -286,7 +270,7 @@ const AdvancedChat = () => {
           setNewGroupName("");
           setSelectedUsers([]);
       } catch (err) {
-          console.error("Group creation failed:", err);
+          console.error(err);
       }
   };
 
@@ -299,7 +283,7 @@ const AdvancedChat = () => {
           });
           setChats(prev => prev.map(c => c._id === res.data.data._id ? res.data.data : c));
       } catch(err) {
-          console.error("Add member failed:", err);
+          console.error(err);
       }
   };
 
@@ -313,7 +297,7 @@ const AdvancedChat = () => {
                    setChats(prev => prev.filter(c => c._id !== activeChatId));
                    setActiveChatId(null);
                } catch (err) {
-                   console.error("Delete chat failed", err);
+                   console.error(err);
                }
                setConfirmModal({ isOpen: false, text: "", onConfirm: null });
            }
@@ -333,15 +317,72 @@ const AdvancedChat = () => {
                    setChats(prev => prev.filter(c => c._id !== activeChatId));
                    setActiveChatId(null);
                } catch (err) {
-                   console.error("Exit group failed", err);
+                   console.error(err);
                }
                setConfirmModal({ isOpen: false, text: "", onConfirm: null });
            }
        });
   };
 
-  const handleFileChange = (e) => {
-      // Handled via POST /api/upload
+  const handleFileChange = async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      const formData = new FormData();
+      formData.append("attachment", file);
+
+      try {
+          const res = await api.post("/api/upload", formData, {
+              headers: { "Content-Type": "multipart/form-data" }
+          });
+          
+          const uploadedFileUrl = res.data.url;
+          const fileType = res.data.type;
+          
+          const currentChatId = activeChatId;
+          const payload = {
+              chatId: currentChatId,
+              content: file.name,
+              type: fileType,
+              fileUrl: uploadedFileUrl
+          };
+
+          const msgRes = await api.post("/api/messages", payload);
+          const savedMsg = msgRes.data.data;
+
+          const mappedMsg = {
+              id: savedMsg._id,
+              text: savedMsg.content,
+              type: savedMsg.type || 'text',
+              sender: "me",
+              time: new Date(savedMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              status: "read", 
+              reactions: [],
+              url: savedMsg.fileUrl
+          };
+
+          setMessages(prev => {
+              const currentMsgs = prev[currentChatId] || [];
+              if (currentMsgs.some(m => m.id === mappedMsg.id)) return prev;
+              return {
+                  ...prev,
+                  [currentChatId]: [...currentMsgs, mappedMsg]
+              };
+          });
+          
+          socket.current.emit("send_message", {
+              chatId: currentChatId,
+              message: savedMsg
+          });
+
+          fetchChats();
+      } catch (err) {
+          console.error("Error uploading file:", err);
+      }
+      
+      if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+      }
   };
 
   const handleReaction = async (msgId, emoji) => {
@@ -367,7 +408,7 @@ const AdvancedChat = () => {
               senderId: myUserId
           });
       } catch (err) {
-          console.error("Reaction failed:", err);
+          console.error(err);
       }
   };
 
@@ -396,11 +437,10 @@ const AdvancedChat = () => {
   return (
     <>
       <style>{`
-        /* Scoped to avoid breaking other pages */
         .chat-wrapper-component {
           position: fixed;
           top: 0;
-          padding-top: 65px; /* Pushes chat down without exposing background gap */
+          padding-top: 65px;
           left: 0;
           right: 0;
           bottom: 0;
@@ -425,6 +465,11 @@ const AdvancedChat = () => {
           display: flex;
           height: 100%;
           width: 100%;
+          position: relative;
+        }
+
+        .mobile-toggle-btn {
+          display: none;
         }
 
         .sidebar {
@@ -581,7 +626,8 @@ const AdvancedChat = () => {
         .message-row.other { justify-content: flex-start; }
 
         .message-hover-actions {
-          display: none;
+          display: flex;
+          align-items: center;
           position: absolute;
           top: -15px;
           background: #222;
@@ -595,11 +641,6 @@ const AdvancedChat = () => {
         .message-row.me .message-hover-actions { right: 0; }
         .message-row.other .message-hover-actions { left: 0; }
 
-        .message-row:hover .message-hover-actions {
-          display: flex;
-          align-items: center;
-        }
-
         .action-icon {
           color: #aaa;
           cursor: pointer;
@@ -607,21 +648,22 @@ const AdvancedChat = () => {
         }
         .action-icon:hover { color: #fff; }
 
+        /* CHANGED: Opens downwards over the message text, aligned to the left/right edges so it never gets cut off by walls */
         .emoji-picker {
           position: absolute;
-          bottom: 100%;
+          top: calc(100% + 5px); /* Pushes menu down instead of up */
           background: #2a2a2a;
           padding: 8px;
           border-radius: 30px;
           display: flex;
           gap: 8px;
-          margin-bottom: 5px;
           border: 1px solid #444;
           box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+          z-index: 20; /* Ensures it sits above message text */
         }
 
-        .message-row.me .emoji-picker { right: -10px; }
-        .message-row.other .emoji-picker { left: -10px; }
+        .message-row.me .emoji-picker { right: 0; }
+        .message-row.other .emoji-picker { left: 0; }
 
         .emoji-picker span {
           cursor: pointer;
@@ -781,7 +823,6 @@ const AdvancedChat = () => {
         .send-btn:hover:not(:disabled) { background-color: #d32f2f; }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Group Modal */
         .modal-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
@@ -821,15 +862,6 @@ const AdvancedChat = () => {
           background: #d32f2f; border: none; color: #fff; cursor: pointer; padding: 8px 16px; border-radius: 6px;
         }
         
-        .mobile-menu-btn {
-          display: none;
-          background: none;
-          border: none;
-          color: #fff;
-          margin-right: 15px;
-          cursor: pointer;
-        }
-        
         .sidebar-backdrop {
           display: none;
         }
@@ -837,9 +869,25 @@ const AdvancedChat = () => {
         @media (max-width: 900px) {
           .app-container {
             flex-direction: column;
-            position: relative;
           }
           
+          .mobile-toggle-btn {
+            display: flex;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 110;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+          }
+
           .sidebar-backdrop {
             display: block;
             position: fixed;
@@ -861,6 +909,7 @@ const AdvancedChat = () => {
             transition: transform 0.3s ease-in-out;
             border-right: 1px solid #333;
             box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            padding-top: 60px;
           }
 
           .sidebar.mobile-open {
@@ -872,14 +921,9 @@ const AdvancedChat = () => {
             height: 100%;
           }
           
-          .mobile-menu-btn {
-            display: flex;
-            align-items: center;
-          }
-           .mobile-back-btn { display: none !important; }
-
           .chat-area-header {
             padding: 15px 10px;
+            padding-left: 65px;
           }
           .chat-area-header h2 {
             font-size: 16px;
@@ -913,12 +957,17 @@ const AdvancedChat = () => {
       <div className="chat-wrapper-component">
         <div className="app-container">
         
-        {/* SIDEBAR BACKDROP */}
+        <button 
+          className="mobile-toggle-btn" 
+          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        >
+          {isMobileSidebarOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
         {isMobileSidebarOpen && (
            <div className="sidebar-backdrop" onClick={() => setIsMobileSidebarOpen(false)}></div>
         )}
 
-        {/* SIDEBAR */}
         <div className={`sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
           <div className="sidebar-header">
             <div className="search-bar">
@@ -961,12 +1010,8 @@ const AdvancedChat = () => {
           </div>
         </div>
 
-        {/* MAIN CHAT AREA */}
         <div className="main-chat">
           <div className="chat-area-header">
-            <button className="mobile-menu-btn" onClick={() => setIsMobileSidebarOpen(true)} title="Menu">
-              <Menu size={24} />
-            </button>
             <div className="avatar">{getInitials(getChatName(activeChatDetails, loggedUser))}</div>
             <div>
               <h2>
@@ -1007,12 +1052,10 @@ const AdvancedChat = () => {
                   onMouseEnter={() => setHoveredMsgId(msg.id)}
                   onMouseLeave={() => { 
                     setHoveredMsgId(null); 
-                    // Do not close emoji picker immediately to prevent vanishing bug on pixel gaps
                   }}
                 >
                   
                   <div className="message-bubble">
-                    {/* Hover Actions */}
                     {(hoveredMsgId === msg.id || showEmojiPicker === msg.id) && (
                       <div className="message-hover-actions">
                         <Smile size={16} className="action-icon" onClick={() => setShowEmojiPicker(msg.id)} />
@@ -1023,7 +1066,6 @@ const AdvancedChat = () => {
                           }} />
                         )}
                         
-                        {/* Emoji Picker Popup */}
                         {showEmojiPicker === msg.id && (
                           <div className="emoji-picker" onMouseLeave={() => setShowEmojiPicker(null)}>
                             {emojis.map(emoji => (
@@ -1034,7 +1076,6 @@ const AdvancedChat = () => {
                       </div>
                     )}
 
-                    {/* Content Display */}
                     {msg.sender === "other" && activeChatDetails?.isGroupChat && (
                       <div style={{ fontSize: '11px', color: '#ff4444', fontWeight: 'bold', marginBottom: '4px', textTransform: 'capitalize' }}>
                         {msg.senderName}
@@ -1060,12 +1101,10 @@ const AdvancedChat = () => {
                       {msg.isEdited && <span className="is-edited">(edited)</span>}
                       {msg.time}
                       {msg.sender === "me" && (
-                        /* Blue ticks implementation */
                         <CheckCheck size={14} style={{ color: msg.status === "read" ? "#34B7F1" : "#888" }} />
                       )}
                     </span>
 
-                    {/* Reactions Display */}
                     {msg.reactions && msg.reactions.length > 0 && (
                       <div className="reactions-container">
                         {msg.reactions.map((emoji, idx) => (
@@ -1097,7 +1136,6 @@ const AdvancedChat = () => {
                 onChange={(e) => setInputValue(e.target.value)}
               />
               
-              {/* Hidden file input */}
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -1120,7 +1158,6 @@ const AdvancedChat = () => {
           </form>
         </div>
 
-        {/* Custom Confirmation Modal */}
         {confirmModal.isOpen && (
           <div className="modal-overlay">
             <div className="modal-content" style={{ width: '350px', textAlign: 'center' }}>
@@ -1135,7 +1172,6 @@ const AdvancedChat = () => {
           </div>
         )}
 
-        {/* Group Creation Modal */}
         {showGroupModal && (
           <div className="modal-overlay">
             <div className="modal-content">

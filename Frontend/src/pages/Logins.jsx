@@ -1,15 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaGoogle, FaRegEye, FaRegEyeSlash, FaFacebook } from "react-icons/fa6";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
-import { jwtDecode } from "jwt-decode";
+import { FaGoogle, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import api from "../api/Axios";
 import { useToast } from "../components/Toast/ToastContext";
 
-// --- IMPORT YOUR LOCAL IMAGE HERE ---
-// Ensure this file exists in your assets folder
 import AuthBg from "../assets/login.jpg"; 
+
+// --- Custom Google Button Component ---
+// (Must be defined inside or wrapped by GoogleOAuthProvider)
+const CustomGoogleButton = ({ handleSocialBackend, showToast }) => {
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Fetch user info using the access token
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        }).then(res => res.json());
+
+        handleSocialBackend({
+          email: userInfo.email,
+          name: userInfo.name,
+          authProvider: 'google',
+          authProviderId: userInfo.sub,
+          photoUrl: userInfo.picture
+        });
+      } catch (err) {
+        showToast('Failed to fetch Google user info', { type: 'error' });
+      }
+    },
+    onError: () => showToast('Google Login Failed', { type: 'error' }),
+  });
+
+  return (
+    <button type="button" className="google-auth-btn" onClick={() => login()}>
+      <FaGoogle size={20} color="#DB4437" />
+      <span>Continue with Google</span>
+    </button>
+  );
+};
+
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -66,31 +96,6 @@ const AuthPage = () => {
       console.log(err);
       showToast(err.response?.data?.message || "Social login failed", { type: "error" });
     }
-  };
-
-  const handleGoogleSuccess = (credentialResponse) => {
-      const decoded = jwtDecode(credentialResponse.credential);
-      handleSocialBackend({
-          email: decoded.email,
-          name: decoded.name,
-          authProvider: 'google',
-          authProviderId: decoded.sub,
-          photoUrl: decoded.picture
-      });
-  };
-
-  const handleFacebookSuccess = (response) => {
-      if(!response || !response.email) {
-          showToast("Facebook login failed or email missing", { type: "error"});
-          return;
-      }
-      handleSocialBackend({
-          email: response.email,
-          name: response.name,
-          authProvider: 'facebook',
-          authProviderId: response.userID,
-          photoUrl: response.picture?.data?.url
-      });
   };
 
   // ==== Forgot Password Logic ====
@@ -173,7 +178,7 @@ const AuthPage = () => {
   // ==== UI ====
   return (
     <div style={styles.pageBackground}>
-        {/* Import Fonts dynamically */}
+        {/* Import Fonts & Add Button Hover CSS dynamically */}
         <style>
             {`
             @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@400;500;800;900&family=Inter:wght@400;500&display=swap');
@@ -191,6 +196,31 @@ const AuthPage = () => {
             }
             .scroll-panel::-webkit-scrollbar-thumb:hover {
               background: #aaa; 
+            }
+
+            /* Google Auth Button Styles */
+            .google-auth-btn {
+              background-color: #fff;
+              border: 1px solid #dadce0;
+              border-radius: 10px;
+              width: 100%;
+              padding: 12px 16px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 12px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              font-family: 'Inter', sans-serif;
+              font-weight: 500;
+              font-size: 15px;
+              color: #3c4043;
+            }
+            .google-auth-btn:hover {
+              background-color: #f8f9fa;
+              border-color: #d2e3fc;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+              transform: translateY(-1px);
             }
 
             @media (max-width: 900px) {
@@ -334,29 +364,14 @@ const AuthPage = () => {
                         {isLogin ? "Sign In" : "Sign Up"}
                     </button>
 
-                    {/* Social Buttons */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                    {/* Google Button */}
+                    <div style={{ marginTop: '15px' }}>
                         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "mock-client-id"}>
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={() => showToast('Google Login Failed', {type: 'error'})}
-                                text={isLogin ? "signin_with" : "signup_with"}
-                                width="300"
+                            <CustomGoogleButton 
+                              handleSocialBackend={handleSocialBackend} 
+                              showToast={showToast} 
                             />
                         </GoogleOAuthProvider>
-                        
-                        <FacebookLogin
-                            appId={import.meta.env.VITE_FACEBOOK_APP_ID || "18000000000000"}
-                            autoLoad={false}
-                            fields="name,email,picture"
-                            callback={handleFacebookSuccess}
-                            render={renderProps => (
-                                <button type="button" style={{...styles.googleBtn, width: '100%', borderColor: '#1877F2', color: '#1877F2', height: '40px'}} onClick={renderProps.onClick}>
-                                    <FaFacebook style={{ marginRight: "10px", color: "#1877F2" }} /> 
-                                    Continue with Facebook
-                                </button>
-                            )}
-                        />
                     </div>
 
                 </form>
@@ -434,11 +449,10 @@ const styles = {
     boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
   },
   
-  // === Left Panel (UPDATED WITH LOCAL IMAGE) ===
+  // === Left Panel ===
   leftPanel: {
     flex: "1",
     position: "relative",
-    // Use the imported image variable here
     backgroundImage: `url(${AuthBg})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
@@ -456,10 +470,9 @@ const styles = {
     left: 0,
     width: "100%",
     height: "100%",
-    /* Red Gradient: Starts Dark top -> Fades to Red at bottom */
     background: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(194, 3, 41, 0.83))", 
     zIndex: 1,
-    mixBlendMode: "multiply", // Helps the red soak into the image
+    mixBlendMode: "multiply", 
   },
 
   leftContent: {
@@ -622,20 +635,7 @@ const styles = {
     cursor: "pointer",
     marginTop: "5px",
   },
-  googleBtn: {
-    backgroundColor: "#fff",
-    border: "1px solid #e1e1e1",
-    padding: "14px",
-    borderRadius: "10px",
-    fontWeight: "500",
-    fontSize: "14px",
-    color: "#333",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: "0px",
-  },
+
   footer: {
     marginTop: "25px",
     textAlign: "center",

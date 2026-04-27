@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlay, FaChevronDown, FaChevronRight, FaHeart, FaPaperPlane, FaCommentAlt, FaEnvelope } from "react-icons/fa";
+import { FaSearch, FaPlay, FaChevronDown, FaChevronRight, FaHeart, FaPaperPlane, FaCommentAlt, FaEnvelope, FaBars } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import { formatNumber } from "../utils/formatters";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -20,6 +20,9 @@ const ArenaHub = () => {
   // 'players' (DB) or 'creators' (YouTube)
   const [activeSection, setActiveSection] = useState("players");
   const [expandedSection, setExpandedSection] = useState("players"); // Sidebar UI state
+  
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [search, setSearch] = useState("");
@@ -27,7 +30,6 @@ const ArenaHub = () => {
   const [visibleCount, setVisibleCount] = useState(12);
 
   /* ===== Auth & Social ===== */
-  // Robustly get User ID (LocalStorage or Token Decode)
   let currentUserId = localStorage.getItem("userId");
   if (!currentUserId && token) {
     try {
@@ -60,9 +62,8 @@ const ArenaHub = () => {
         setVideos({});
         setLoading(false);
       });
-  }, [activeSection]); // Re-fetch when section changes
+  }, [activeSection]);
 
-  // Reset visible count on filter change
   useEffect(() => {
     setVisibleCount(12);
   }, [selectedGame, activeSection, search]);
@@ -75,7 +76,6 @@ const ArenaHub = () => {
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
-    // When expanding a section, also make it active to fetch data
     if (expandedSection !== section) {
       setActiveSection(section);
       setSelectedGame("All");
@@ -85,21 +85,19 @@ const ArenaHub = () => {
   const handleSelection = (section, game) => {
     setActiveSection(section);
     setSelectedGame(game);
+    setIsSidebarOpen(false); // Close sidebar on mobile after selection
   };
 
   /* ===== LIKE LOGIC (Grid) ===== */
   const likeVideo = async (id, e) => {
     e.stopPropagation();
-    // Optimistic update
     const updatedVideos = { ...videos };
     let found = false;
 
-    // Find video in nested structure
     for (const gameKey in updatedVideos) {
       updatedVideos[gameKey] = updatedVideos[gameKey].map(v => {
         if (v.id === id || v.id?.videoId === id) {
           found = true;
-          // Optimistic logic could go here, but since structure is complex, we just fetch
         }
         return v;
       });
@@ -131,7 +129,6 @@ const ArenaHub = () => {
   const allVideos = Object.values(videos).flat();
   let displayVideos = selectedGame === "All" ? shuffleArray(allVideos) : videos[selectedGame] || [];
 
-  // Search Filter
   displayVideos = (displayVideos || []).filter((video) =>
     video?.snippet?.title?.toLowerCase().includes(search.toLowerCase()) ||
     video?.snippet?.channelTitle?.toLowerCase().includes(search.toLowerCase())
@@ -140,26 +137,79 @@ const ArenaHub = () => {
   /* ===== Loading Screen ===== */
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh', width: '100%', backgroundColor: '#080808', 
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', justifyContent: 'center',
-        position: 'fixed', top: 0, left: 0, zIndex: 9999
-      }}>
-        <div style={{
-          width: '50px', height: '50px',
-          background: 'linear-gradient(135deg, #222, #000)',
-          border: '2px solid #ff001f',
-          animation: 'escout-spin 1.5s ease-in-out infinite', marginBottom: '25px',
-          boxShadow: '0 0 15px rgba(255, 0, 31, 0.4)'
-        }}></div>
-        <div style={{
-          color: '#ff001f', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '24px', 
-          letterSpacing: '4px', textTransform: 'uppercase', textShadow: '0 0 15px rgba(255, 0, 31, 0.5)'
-        }}>
+      <div className="loading-overlay">
+        <div className="loading-spinner"></div>
+        <div className="loading-text">
           ACCESSING_{activeSection}_DATALINK...
         </div>
+        
         <style>{`
-          @keyframes escout-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          .loading-overlay {
+            min-height: 100vh; 
+            width: 100%; 
+            background-color: #080808; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: 9999;
+            padding: 0 20px;
+          }
+          
+          .loading-spinner {
+            width: 50px; 
+            height: 50px;
+            background: linear-gradient(135deg, #222, #000);
+            border: 2px solid #ff001f;
+            animation: escout-spin 1.5s ease-in-out infinite; 
+            margin-bottom: 25px;
+            box-shadow: 0 0 15px rgba(255, 0, 31, 0.4);
+          }
+          
+          .loading-text {
+            color: #ff001f; 
+            font-family: 'Rajdhani', sans-serif; 
+            font-weight: 700; 
+            font-size: 24px; 
+            letter-spacing: 4px; 
+            text-transform: uppercase; 
+            text-shadow: 0 0 15px rgba(255, 0, 31, 0.5);
+            text-align: center;
+            word-wrap: break-word;
+            max-width: 100%;
+          }
+          
+          @keyframes escout-spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+          }
+
+          @media (max-width: 768px) {
+            .loading-text {
+              font-size: 18px;
+              letter-spacing: 2px;
+            }
+            .loading-spinner {
+              width: 40px;
+              height: 40px;
+              margin-bottom: 20px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .loading-text {
+              font-size: 14px;
+              letter-spacing: 1px;
+            }
+            .loading-spinner {
+              width: 30px;
+              height: 30px;
+              margin-bottom: 15px;
+            }
+          }
         `}</style>
       </div>
     );
@@ -190,6 +240,11 @@ const ArenaHub = () => {
           font-family: 'Rajdhani', sans-serif;
         }
 
+        /* SIDEBAR OVERLAY (MOBILE) */
+        .sidebar-backdrop {
+          display: none;
+        }
+
         /* SIDEBAR */
         .sidebar {
           width: 260px;
@@ -201,11 +256,13 @@ const ArenaHub = () => {
           top: 80px;
           height: calc(100vh - 80px);
           z-index: 50;
+          transition: transform 0.3s ease-in-out;
         }
 
-        .brand-section { padding: 40px 30px; border-bottom: 1px solid var(--border-dark); }
+        .brand-section { padding: 40px 30px; border-bottom: 1px solid var(--border-dark); display: flex; justify-content: space-between; align-items: center; }
         .sidebar-title { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; line-height: 1; }
         .sidebar-title span { color: var(--red-primary); }
+        .mobile-close-btn { display: none; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
 
         .menu-container { padding: 20px 0; overflow-y: auto; }
 
@@ -237,20 +294,39 @@ const ArenaHub = () => {
         }
 
         /* MAIN CONTENT */
-        /* CHANGED: Reduced top padding from 50px to 15px, and added z-index constraints */
         .content { 
-            flex: 1; 
-            margin-left: 260px; 
-            padding: 15px 60px 50px 60px; 
-            margin-top: 80px; 
-            position: relative;
-            z-index: 1;
+          flex: 1; 
+          margin-left: 260px; 
+          padding: 15px 60px 50px 60px; 
+          margin-top: 80px; 
+          position: relative;
+          z-index: 1;
         }
 
         .header {
           display: flex; justify-content: space-between; align-items: flex-end;
           margin-bottom: 50px; border-bottom: 1px solid var(--border-dark); padding-bottom: 20px;
         }
+        
+        .header-left {
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+        }
+        
+        .mobile-menu-btn {
+          display: none;
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 28px;
+          cursor: pointer;
+          margin-top: 5px;
+          transition: color 0.3s;
+        }
+        
+        .mobile-menu-btn:hover { color: var(--red-primary); }
+
         .page-title h1 {
           font-family: 'Teko', sans-serif; font-size: 60px; text-transform: uppercase;
           line-height: 0.9; margin: 0;
@@ -259,7 +335,6 @@ const ArenaHub = () => {
         .highlight-text { color: var(--red-primary); }
 
         /* SEARCH */
-        /* CHANGED: Added z-index: 0 so external dropdowns can render over it */
         .search-container { position: relative; width: 300px; z-index: 0; }
         .search-input {
           width: 100%; background: transparent; border: none; border-bottom: 1px solid #333;
@@ -316,28 +391,57 @@ const ArenaHub = () => {
           position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
           display: flex; align-items: center; justify-content: center;
         }
-        .modal-box {
-          width: 80%; max-width: 1100px; aspect-ratio: 16/9; background: #000; position: relative;
-          box-shadow: 0 0 50px rgba(255, 0, 31, 0.1); border: 1px solid #222;
-        }
-        .close-btn {
-          position: absolute; top: -40px; right: 0; background: none; border: none;
-          color: #fff; font-size: 30px; cursor: pointer;
-        }
-        .close-btn:hover { color: var(--red-primary); }
-
+        
+        /* RESPONSIVE DESIGN */
         @media (max-width: 900px) {
-          .sidebar { display: none; }
-          .content { margin-left: 0; padding: 20px; }
+          .sidebar-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+          }
+          
+          .sidebar-backdrop.visible {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .sidebar { 
+            transform: translateX(-100%);
+            box-shadow: none;
+          }
+          
+          .sidebar.mobile-open {
+            transform: translateX(0);
+            box-shadow: 5px 0 25px rgba(0,0,0,0.8);
+          }
+          
+          .mobile-close-btn { display: block; }
+          .mobile-menu-btn { display: block; }
+
+          .content { margin-left: 0; padding: 20px; margin-top: 80px; }
           .header { flex-direction: column; align-items: flex-start; gap: 20px; }
           .search-container { width: 100%; }
         }
       `}</style>
 
+      {/* ===== SIDEBAR BACKDROP ===== */}
+      <div 
+        className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`} 
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+
       {/* ===== SIDEBAR ===== */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="brand-section">
           <h2 className="sidebar-title">ESCOUT <span>HUB</span></h2>
+          <button className="mobile-close-btn" onClick={() => setIsSidebarOpen(false)}>
+            <IoMdClose />
+          </button>
         </div>
 
         <div className="menu-container">
@@ -390,11 +494,16 @@ const ArenaHub = () => {
       {/* ===== CONTENT ===== */}
       <main className="content">
         <header className="header" style={{ visibility: selectedVideo ? "hidden" : "visible" }}>
-          <div className="page-title">
-            <div className="page-subtitle">
-              {activeSection} // <span className="highlight-text">{selectedGame}</span>
+          <div className="header-left">
+            <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)}>
+              <FaBars />
+            </button>
+            <div className="page-title">
+              <div className="page-subtitle">
+                {activeSection} // <span className="highlight-text">{selectedGame}</span>
+              </div>
+              <h1>MEDIA <span className="highlight-text">ARCHIVE</span></h1>
             </div>
-            <h1>MEDIA <span className="highlight-text">ARCHIVE</span></h1>
           </div>
 
           <div className="search-container">
@@ -412,11 +521,8 @@ const ArenaHub = () => {
         <div className="video-grid">
           {displayVideos.length > 0 ? (
             displayVideos.slice(0, visibleCount).map((video) => {
-              // Handle ID differences between Youtube API and DB
               const id = video?.id?.videoId || video?.id;
-              // Handle Thumbnail differences
               const thumbnailUrl = video?.snippet?.thumbnails?.high?.url || video?.snippet?.thumbnails?.medium?.url || "";
-              // Handle Video Source differences (DB uses videoUrl, YouTube uses iframe ID)
               const isPlayerVideo = video.isPlayerVideo;
 
               return (
@@ -445,7 +551,6 @@ const ArenaHub = () => {
                       <span>{formatNumber(Number(video.statistics?.viewCount || 0))} VIEWS</span>
                     </div>
 
-                    {/* Social Actions for Player Videos */}
                     {isPlayerVideo && (
                       <div className="actions-row">
                         <button className="stat-item action-btn" onClick={(e) => likeVideo(id, e)}>
@@ -472,7 +577,6 @@ const ArenaHub = () => {
                       </div>
                     )}
                   </div>
-                  {/* Add style for actions-row */}
                   <style>{`
                       .actions-row { display: flex; gap: 15px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
                       .stat-item { display: flex; align-items: center; gap: 5px; color: #666; font-size: 12px; font-weight: 600; background:none; border:none; cursor: pointer; }
@@ -514,18 +618,15 @@ const ArenaHub = () => {
    SUB-COMPONENT: ARENA VIDEO MODAL
    ========================================= */
 const ArenaVideoModal = ({ video, onClose, currentUserId, onUpdate }) => {
-  // Only for Player videos
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
-  // YouTube videos don't use these, but we init hooks unconditionally
   const isPlayerVideo = video.isPlayerVideo;
   const videoId = video?.id?.videoId || video?.id;
 
   useEffect(() => {
     if (!isPlayerVideo || !videoId) return;
 
-    // View Increment (Session Based)
     const sessionKey = `viewed_${videoId}`;
     if (!sessionStorage.getItem(sessionKey)) {
       fetch(`${API_BASE_URL}/api/arena/${videoId}/view`, { method: "PUT" })
@@ -533,7 +634,6 @@ const ArenaVideoModal = ({ video, onClose, currentUserId, onUpdate }) => {
       sessionStorage.setItem(sessionKey, "true");
     }
 
-    // Fetch comments
     fetch(`${API_BASE_URL}/api/arena/${videoId}/comments`)
       .then(res => res.json())
       .then(data => setComments(data))
@@ -564,7 +664,7 @@ const ArenaVideoModal = ({ video, onClose, currentUserId, onUpdate }) => {
         },
         body: JSON.stringify({ text: tempComment.text })
       });
-      if (onUpdate) onUpdate(); // Refresh main grid
+      if (onUpdate) onUpdate();
     } catch (err) { console.error(err); }
   };
 
@@ -596,7 +696,6 @@ const ArenaVideoModal = ({ video, onClose, currentUserId, onUpdate }) => {
             )}
           </div>
 
-          {/* Comment Section ONLY for Player Videos */}
           {isPlayerVideo && (
             <div className="interaction-section">
               <div className="int-header">

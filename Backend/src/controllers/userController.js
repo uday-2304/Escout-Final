@@ -354,7 +354,7 @@ const socialLogin = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Missing required fields for social login");
     }
 
-    if (!['google', 'facebook'].includes(authProvider)) {
+    if (!['google'].includes(authProvider)) {
         throw new ApiError(400, "Invalid auth provider");
     }
 
